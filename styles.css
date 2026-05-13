@@ -660,6 +660,11 @@ input:checked + .toggle-slider:before {
     -webkit-overflow-scrolling: touch;
 }
 
+#schedulesContainer {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Schedule Form */
 .schedule-form {
     display: grid;
