@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPARTANS - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" style="position: fixed; top: 20px; right: 20px; z-index: 1001;">🌙</button>
+
+    <div class="auth-container">
+        <div class="auth-card glass-panel">
+            <div class="auth-logo">
+                <h1>SPARTANS</h1>
+                <p>Sistematikong Pagpapaunlad ng Rebisyon at Talaan ng Academikong Notipikasyon sa Update System</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('student')">Student</button>
+                <button class="auth-tab" onclick="switchTab('professor')">Professor</button>
+            </div>
+
+            <div id="alertBox" class="alert"></div>
+
+            <!-- Student Login -->
+            <div id="studentLogin" class="tab-content active">
+                <form onsubmit="handleStudentLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">SR-Code</label>
+                        <input type="text" class="form-input" id="studentSRCode" placeholder="YY-XXXXX" pattern="\d{2}-\d{5}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="studentPassword" placeholder="Enter any password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login as Student</button>
+                </form>
+            </div>
+
+            <!-- Professor Login -->
+            <div id="professorLogin" class="tab-content">
+                <form onsubmit="handleProfessorLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Professor ID</label>
+                        <input type="text" class="form-input" id="professorId" placeholder="Enter your professor ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="professorPassword" placeholder="Enter your password" required>
+                    </div>
+                    <div class="forgot-link">
+                        <a href="#" onclick="showForgotPassword(event)">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login as Professor</button>
+                </form>
+                <div class="auth-footer">
+                    Don't have an account? <a href="prof_register.html">Register here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotPasswordModal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3>Reset Password</h3>
+                <button class="modal-close" onclick="closeForgotPassword()">&times;</button>
+            </div>
+
+            <div id="forgotStep1">
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Enter your registered email to receive an OTP code.</p>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="resetEmail" placeholder="your.email@example.com" required>
+                </div>
+                <button class="btn btn-primary" onclick="sendOTP()">Send OTP</button>
+            </div>
+
+            <div id="forgotStep2" style="display: none;">
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">Enter the 6-digit OTP sent to your email.</p>
+                <div class="otp-input-group">
+                    <input type="text" class="otp-input" maxlength="1" oninput="otpNext(this, 1)">
+                    <input type="text" class="otp-input" maxlength="1" oninput="otpNext(this, 2)">
+                    <input type="text" class="otp-input" maxlength="1" oninput="otpNext(this, 3)">
+                    <input type="text" class="otp-input" maxlength="1" oninput="otpNext(this, 4)">
+                    <input type="text" class="otp-input" maxlength="1" oninput="otpNext(this, 5)">
+                    <input type="text" class="otp-input" maxlength="1" oninput="otpNext(this, 6)">
+                </div>
+                <button class="btn btn-primary" onclick="verifyOTP()">Verify OTP</button>
+            </div>
+
+            <div id="forgotStep3" style="display: none;">
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Enter your new password.</p>
+                <div class="form-group">
+                    <label class="form-label">New Password</label>
+                    <input type="password" class="form-input" id="newPassword" placeholder="Enter new password" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm new password" required>
+                </div>
+                <button class="btn btn-primary" onclick="resetPassword()">Reset Password</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize demo data
+        function initDemoData() {
+            if (!localStorage.getItem('spartansInitialized')) {
+                const demoProfessor = {
+                    id: 'PROF-001',
+                    firstName: 'Juan',
+                    lastName: 'Delacruz',
+                    email: 'juan.delacruz@university.edu',
+                    password: 'demo123',
+                    avatar: '',
+                    status: 'AVAILABLE',
+                    statusNote: '',
+                    schedules: [
+                        {
+                            id: 'sch1',
+                            day: 'Monday',
+                            startTime: '08:00',
+                            endTime: '10:00',
+                            program: 'BSME',
+                            yearLevel: '3',
+                            course: 'MD 321',
+                            courseName: 'Machine Design 1',
+                            room: 'Engineering 301'
+                        },
+                        {
+                            id: 'sch2',
+                            day: 'Wednesday',
+                            startTime: '13:00',
+                            endTime: '15:00',
+                            program: 'BSAE',
+                            yearLevel: '2',
+                            course: 'AE 211',
+                            courseName: 'Thermodynamics',
+                            room: 'Lab 204'
+                        }
+                    ]
+                };
+                localStorage.setItem('professors', JSON.stringify([demoProfessor]));
+                localStorage.setItem('spartansInitialized', 'true');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertBox');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => alert.classList.remove('show'), 4000);
+        }
+
+        function switchTab(role) {
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (role === 'student') {
+                document.querySelectorAll('.auth-tab')[0].classList.add('active');
+                document.getElementById('studentLogin').classList.add('active');
+            } else {
+                document.querySelectorAll('.auth-tab')[1].classList.add('active');
+                document.getElementById('professorLogin').classList.add('active');
+            }
+        }
+
+        function handleStudentLogin(e) {
+            e.preventDefault();
+            const srCode = document.getElementById('studentSRCode').value;
+            
+            if (!/^\d{2}-\d{5}$/.test(srCode)) {
+                showAlert('Invalid SR-Code format. Use YY-XXXXX pattern.', 'error');
+                return;
+            }
+            
+            sessionStorage.setItem('studentSRCode', srCode);
+            sessionStorage.setItem('studentLoggedIn', 'true');
+            window.location.href = 'student_dashboard.html';
+        }
+
+        function handleProfessorLogin(e) {
+            e.preventDefault();
+            const profId = document.getElementById('professorId').value;
+            const password = document.getElementById('professorPassword').value;
+            
+            const professors = JSON.parse(localStorage.getItem('professors') || '[]');
+            const professor = professors.find(p => p.id === profId && p.password === password);
+            
+            if (professor) {
+                sessionStorage.setItem('professorId', profId);
+                sessionStorage.setItem('professorLoggedIn', 'true');
+                window.location.href = 'prof_dashboard.html';
+            } else {
+                showAlert('Invalid Professor ID or password.', 'error');
+            }
+        }
+
+        function showForgotPassword(e) {
+            e.preventDefault();
+            document.getElementById('forgotPasswordModal').classList.add('active');
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'none';
+        }
+
+        function closeForgotPassword() {
+            document.getElementById('forgotPasswordModal').classList.remove('active');
+        }
+
+        let resetEmailValue = '';
+
+        function sendOTP() {
+            const email = document.getElementById('resetEmail').value;
+            const professors = JSON.parse(localStorage.getItem('professors') || '[]');
+            const professor = professors.find(p => p.email === email);
+            
+            if (!professor) {
+                showAlert('Email not found in our records.', 'error');
+                return;
+            }
+            
+            resetEmailValue = email;
+            document.getElementById('forgotStep1').style.display = 'none';
+            document.getElementById('forgotStep2').style.display = 'block';
+        }
+
+        function otpNext(input, index) {
+            if (input.value.length === 1) {
+                const inputs = document.querySelectorAll('.otp-input');
+                if (index < inputs.length) {
+                    inputs[index].focus();
+                }
+            }
+        }
+
+        function verifyOTP() {
+            const inputs = document.querySelectorAll('.otp-input');
+            const otp = Array.from(inputs).map(i => i.value).join('');
+            
+            if (otp.length !== 6) {
+                showAlert('Please enter a complete 6-digit OTP.', 'error');
+                return;
+            }
+            
+            document.getElementById('forgotStep2').style.display = 'none';
+            document.getElementById('forgotStep3').style.display = 'block';
+        }
+
+        function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showAlert('Passwords do not match.', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                showAlert('Password must be at least 4 characters.', 'error');
+                return;
+            }
+            
+            const professors = JSON.parse(localStorage.getItem('professors') || '[]');
+            const index = professors.findIndex(p => p.email === resetEmailValue);
+            
+            if (index !== -1) {
+                professors[index].password = newPassword;
+                localStorage.setItem('professors', JSON.stringify(professors));
+                showAlert('Password reset successful!', 'success');
+                setTimeout(() => {
+                    closeForgotPassword();
+                }, 1500);
+            }
+        }
+
+        // Initialize on load
+        initDemoData();
+
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeToggle');
+            body.classList.toggle('light-mode');
+            const isLight = body.classList.contains('light-mode');
+            btn.textContent = isLight ? '☀️' : '🌙';
+            localStorage.setItem('spartansTheme', isLight ? 'light' : 'dark');
+        }
+
+        (function() {
+            const saved = localStorage.getItem('spartansTheme');
+            if (saved === 'light') {
+                document.body.classList.add('light-mode');
+                const btn = document.getElementById('themeToggle');
+                if (btn) btn.textContent = '☀️';
+            }
+        })();
+    </script>
+</body>
+</html>

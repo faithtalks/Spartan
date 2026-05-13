@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPARTANS - Professor Registration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" style="position: fixed; top: 20px; right: 20px; z-index: 1001;">🌙</button>
+
+    <div class="auth-container">
+        <div class="auth-card glass-panel">
+            <div class="auth-logo">
+                <h1>SPARTANS</h1>
+                <p>Faculty Account Registration</p>
+            </div>
+
+            <div id="alertBox" class="alert"></div>
+
+            <form onsubmit="handleRegistration(event)">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-input" id="firstName" placeholder="Enter your first name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-input" id="lastName" placeholder="Enter your last name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Professor ID</label>
+                    <input type="text" class="form-input" id="profId" placeholder="e.g., PROF-002" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="email" placeholder="your.email@university.edu" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="password" placeholder="Create a password" required minlength="4">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="index.html">Login here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertBox');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => alert.classList.remove('show'), 4000);
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const profId = document.getElementById('profId').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match.', 'error');
+                return;
+            }
+            
+            const professors = JSON.parse(localStorage.getItem('professors') || '[]');
+            
+            if (professors.some(p => p.id === profId)) {
+                showAlert('Professor ID already exists.', 'error');
+                return;
+            }
+            
+            if (professors.some(p => p.email === email)) {
+                showAlert('Email already registered.', 'error');
+                return;
+            }
+            
+            const newProfessor = {
+                id: profId,
+                firstName,
+                lastName,
+                email,
+                password,
+                avatar: '',
+                status: 'AVAILABLE',
+                statusNote: '',
+                schedules: []
+            };
+            
+            professors.push(newProfessor);
+            localStorage.setItem('professors', JSON.stringify(professors));
+            
+            showAlert('Account created successfully! Redirecting to login...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeToggle');
+            body.classList.toggle('light-mode');
+            const isLight = body.classList.contains('light-mode');
+            btn.textContent = isLight ? '☀️' : '🌙';
+            localStorage.setItem('spartansTheme', isLight ? 'light' : 'dark');
+        }
+
+        (function() {
+            const saved = localStorage.getItem('spartansTheme');
+            if (saved === 'light') {
+                document.body.classList.add('light-mode');
+                const btn = document.getElementById('themeToggle');
+                if (btn) btn.textContent = '☀️';
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPARTANS - Professor Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+
+    <nav class="dynamic-island-nav">
+        <span class="nav-brand">SPARTANS</span>
+        <span class="nav-clock" id="navClock"></span>
+        <div class="nav-user">
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
+            <a class="nav-link" onclick="logout()">Logout</a>
+            <div class="nav-user-avatar" id="navAvatar"></div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div id="alertBox" class="alert"></div>
+
+        <div class="dashboard-card glass-panel" style="margin-bottom: 24px;">
+            <div class="profile-section">
+                <div class="profile-avatar" id="profileAvatar"></div>
+                <div class="profile-info">
+                    <h2 id="profName"></h2>
+                    <p id="profId"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Status Control -->
+            <div class="dashboard-card glass-panel">
+                <h3>Status Control</h3>
+                <div class="status-toggle">
+                    <button class="status-btn" id="btnAvailable" onclick="setStatus('AVAILABLE')">
+                        AVAILABLE
+                    </button>
+                    <button class="status-btn" id="btnBusy" onclick="setStatus('BUSY')">
+                        BUSY
+                    </button>
+                </div>
+                <div class="auto-pilot-toggle">
+                    <span class="auto-pilot-label">Auto-Pilot Mode</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoPilotToggle" onchange="toggleAutoPilot()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status Note</label>
+                    <textarea class="note-input" id="statusNote" placeholder="e.g., In laboratory until 3 PM" onblur="saveStatusNote()"></textarea>
+                </div>
+            </div>
+
+            <!-- Add Schedule -->
+            <div class="dashboard-card glass-panel">
+                <h3>Add Schedule</h3>
+                <div class="schedule-form">
+                    <div class="form-group">
+                        <label class="form-label">Day</label>
+                        <select class="form-input" id="schedDay" required>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Program</label>
+                        <select class="form-input" id="schedProgram" onchange="updateCourses()" required>
+                            <option value="">Select Program</option>
+                            <option value="BSPetE">BSPetE - Petroleum Engineering</option>
+                            <option value="BSAE">BSAE - Automotive Engineering</option>
+                            <option value="BSNAME">BSNAME - Naval Architecture & Marine Engineering</option>
+                            <option value="BSME">BSME - Mechanical Engineering</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Year Level</label>
+                        <select class="form-input" id="schedYear" onchange="updateCourses()" required>
+                            <option value="">Select Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Course</label>
+                        <select class="form-input" id="schedCourse" required>
+                            <option value="">Select course first</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Start Time</label>
+                        <input type="time" class="form-input" id="schedStart" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Time</label>
+                        <input type="time" class="form-input" id="schedEnd" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Room</label>
+                        <input type="text" class="form-input" id="schedRoom" placeholder="e.g., Engineering 301" required>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" onclick="addSchedule()">Add Schedule</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedules List -->
+        <div class="dashboard-card glass-panel">
+            <h3>My Schedules</h3>
+            <div id="schedulesContainer"></div>
+        </div>
+
+        <!-- Profile Management -->
+        <div class="dashboard-card glass-panel">
+            <h3>Profile Settings</h3>
+            <div class="form-group">
+                <label class="form-label">Profile Picture</label>
+                <div class="file-input-wrapper">
+                    <button class="btn btn-secondary btn-sm">Upload Avatar</button>
+                    <input type="file" accept="image/*" onchange="uploadAvatar(event)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Change Password</label>
+                <input type="password" class="form-input" id="newPassword" placeholder="New password" style="margin-bottom: 10px;">
+                <button class="btn btn-secondary btn-sm" onclick="changePassword()">Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const curriculum = {
+            'BSPetE': {
+                '1': [
+                    { code: 'PetE 101', name: 'Introduction to Petroleum Engineering' },
+                    { code: 'PetE 102', name: 'Geology for Petroleum Engineers' },
+                    { code: 'Math 101', name: 'Calculus 1' },
+                    { code: 'Chem 101', name: 'General Chemistry' },
+                    { code: 'Phys 101', name: 'Physics for Engineers' }
+                ],
+                '2': [
+                    { code: 'PetE 201', name: 'Fluid Mechanics' },
+                    { code: 'PetE 202', name: 'Drilling Engineering 1' },
+                    { code: 'PetE 203', name: 'Reservoir Engineering 1' },
+                    { code: 'Math 201', name: 'Differential Equations' },
+                    { code: 'Thermo 201', name: 'Thermodynamics' }
+                ],
+                '3': [
+                    { code: 'PetE 301', name: 'Production Engineering' },
+                    { code: 'PetE 302', name: 'Reservoir Engineering 2' },
+                    { code: 'PetE 303', name: 'Drilling Engineering 2' },
+                    { code: 'PetE 304', name: 'Petroleum Economics' },
+                    { code: 'PetE 305', name: 'Well Logging' }
+                ],
+                '4': [
+                    { code: 'PetE 401', name: 'Field Development' },
+                    { code: 'PetE 402', name: 'Enhanced Oil Recovery' },
+                    { code: 'PetE 403', name: 'Capstone Project' },
+                    { code: 'PetE 404', name: 'Petroleum Environmental Engineering' },
+                    { code: 'PetE 405', name: 'Offshore Engineering' }
+                ]
+            },
+            'BSAE': {
+                '1': [
+                    { code: 'AE 101', name: 'Introduction to Automotive Engineering' },
+                    { code: 'AE 102', name: 'Automotive Drafting' },
+                    { code: 'Math 101', name: 'Calculus 1' },
+                    { code: 'Phys 101', name: 'Physics for Engineers' },
+                    { code: 'Chem 101', name: 'General Chemistry' }
+                ],
+                '2': [
+                    { code: 'AE 201', name: 'Automotive Mechanics' },
+                    { code: 'AE 202', name: 'Thermodynamics' },
+                    { code: 'AE 203', name: 'Strength of Materials' },
+                    { code: 'AE 204', name: 'Automotive Electronics' },
+                    { code: 'Math 201', name: 'Differential Equations' }
+                ],
+                '3': [
+                    { code: 'AE 301', name: 'Engine Technology' },
+                    { code: 'AE 302', name: 'Vehicle Design' },
+                    { code: 'AE 303', name: 'Automotive Systems' },
+                    { code: 'AE 304', name: 'Automotive Testing' },
+                    { code: 'AE 305', name: 'Alternative Fuels' }
+                ],
+                '4': [
+                    { code: 'AE 401', name: 'Electric Vehicles' },
+                    { code: 'AE 402', name: 'Autonomous Vehicle Technology' },
+                    { code: 'AE 403', name: 'Capstone Project' },
+                    { code: 'AE 404', name: 'Automotive Safety' },
+                    { code: 'AE 405', name: 'Manufacturing Processes' }
+                ]
+            },
+            'BSNAME': {
+                '1': [
+                    { code: 'NAME 101', name: 'Introduction to Naval Architecture' },
+                    { code: 'NAME 102', name: 'Ship Theory' },
+                    { code: 'Math 101', name: 'Calculus 1' },
+                    { code: 'Phys 101', name: 'Physics for Engineers' },
+                    { code: 'Chem 101', name: 'General Chemistry' }
+                ],
+                '2': [
+                    { code: 'NAME 201', name: 'Naval Architecture 1' },
+                    { code: 'NAME 202', name: 'Marine Engineering 1' },
+                    { code: 'NAME 203', name: 'Fluid Mechanics' },
+                    { code: 'NAME 204', name: 'Ship Stability' },
+                    { code: 'Math 201', name: 'Differential Equations' }
+                ],
+                '3': [
+                    { code: 'NAME 301', name: 'Naval Architecture 2' },
+                    { code: 'NAME 302', name: 'Marine Engineering 2' },
+                    { code: 'NAME 303', name: 'Ship Construction' },
+                    { code: 'NAME 304', name: 'Marine Structures' },
+                    { code: 'NAME 305', name: 'Hydrodynamics' }
+                ],
+                '4': [
+                    { code: 'NAME 401', name: 'Ship Design' },
+                    { code: 'NAME 402', name: 'Offshore Structures' },
+                    { code: 'NAME 403', name: 'Capstone Project' },
+                    { code: 'NAME 404', name: 'Marine Surveying' },
+                    { code: 'NAME 405', name: 'Port and Harbor Engineering' }
+                ]
+            },
+            'BSME': {
+                '1': [
+                    { code: 'ME 101', name: 'Introduction to Mechanical Engineering' },
+                    { code: 'ME 102', name: 'Mechanical Drafting' },
+                    { code: 'Math 101', name: 'Calculus 1' },
+                    { code: 'Phys 101', name: 'Physics for Engineers' },
+                    { code: 'Chem 101', name: 'General Chemistry' }
+                ],
+                '2': [
+                    { code: 'ME 201', name: 'Thermodynamics 1' },
+                    { code: 'ME 202', name: 'Fluid Mechanics' },
+                    { code: 'ME 203', name: 'Strength of Materials' },
+                    { code: 'ME 204', name: 'Machine Elements' },
+                    { code: 'Math 201', name: 'Differential Equations' }
+                ],
+                '3': [
+                    { code: 'ME 301', name: 'Machine Design 1' },
+                    { code: 'ME 302', name: 'Heat Transfer' },
+                    { code: 'ME 303', name: 'Manufacturing Processes' },
+                    { code: 'ME 304', name: 'HVAC Systems' },
+                    { code: 'ME 305', name: 'Instrumentation' }
+                ],
+                '4': [
+                    { code: 'ME 401', name: 'Machine Design 2' },
+                    { code: 'ME 402', name: 'Power Plant Engineering' },
+                    { code: 'ME 403', name: 'Capstone Project' },
+                    { code: 'ME 404', name: 'Robotics' },
+                    { code: 'ME 405', name: 'Renewable Energy Systems' }
+                ]
+            }
+        };
+
+        let currentProfessor = null;
+        let autoPilotInterval = null;
+
+        function init() {
+            if (!sessionStorage.getItem('professorLoggedIn')) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const profId = sessionStorage.getItem('professorId');
+            const professors = JSON.parse(localStorage.getItem('professors') || '[]');
+            currentProfessor = professors.find(p => p.id === profId);
+
+            if (!currentProfessor) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            renderProfile();
+            renderStatus();
+            renderSchedules();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('navClock').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function renderProfile() {
+            const avatarEl = document.getElementById('profileAvatar');
+            const navAvatarEl = document.getElementById('navAvatar');
+            
+            if (currentProfessor.avatar) {
+                avatarEl.innerHTML = `<img src="${currentProfessor.avatar}" alt="Avatar">`;
+                navAvatarEl.innerHTML = `<img src="${currentProfessor.avatar}" alt="Avatar">`;
+            } else {
+                const initials = currentProfessor.firstName[0] + currentProfessor.lastName[0];
+                avatarEl.textContent = initials;
+                navAvatarEl.textContent = initials;
+            }
+
+            document.getElementById('profName').textContent = `${currentProfessor.firstName} ${currentProfessor.lastName}`;
+            document.getElementById('profId').textContent = currentProfessor.id;
+        }
+
+        function renderStatus() {
+            const btnAvailable = document.getElementById('btnAvailable');
+            const btnBusy = document.getElementById('btnBusy');
+            
+            btnAvailable.className = `status-btn ${currentProfessor.status === 'AVAILABLE' ? 'active-available' : ''}`;
+            btnBusy.className = `status-btn ${currentProfessor.status === 'BUSY' ? 'active-busy' : ''}`;
+            
+            document.getElementById('statusNote').value = currentProfessor.statusNote || '';
+        }
+
+        function setStatus(status) {
+            if (document.getElementById('autoPilotToggle').checked) return;
+            
+            currentProfessor.status = status;
+            saveProfessor();
+            renderStatus();
+        }
+
+        function toggleAutoPilot() {
+            const isAutoPilot = document.getElementById('autoPilotToggle').checked;
+            const btnAvailable = document.getElementById('btnAvailable');
+            const btnBusy = document.getElementById('btnBusy');
+            
+            if (isAutoPilot) {
+                btnAvailable.disabled = true;
+                btnBusy.disabled = true;
+                autoPilotInterval = setInterval(autoPilotCheck, 60000);
+                autoPilotCheck();
+            } else {
+                btnAvailable.disabled = false;
+                btnBusy.disabled = false;
+                if (autoPilotInterval) {
+                    clearInterval(autoPilotInterval);
+                    autoPilotInterval = null;
+                }
+            }
+        }
+
+        function autoPilotCheck() {
+            const now = new Date();
+            const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            
+            let isBusy = false;
+            for (const sched of currentProfessor.schedules) {
+                if (sched.day === currentDay) {
+                    const start = parseInt(sched.startTime.split(':')[0]) * 60 + parseInt(sched.startTime.split(':')[1]);
+                    const end = parseInt(sched.endTime.split(':')[0]) * 60 + parseInt(sched.endTime.split(':')[1]);
+                    if (currentTime >= start && currentTime <= end) {
+                        isBusy = true;
+                        break;
+                    }
+                }
+            }
+            
+            const newStatus = isBusy ? 'BUSY' : 'AVAILABLE';
+            if (currentProfessor.status !== newStatus) {
+                currentProfessor.status = newStatus;
+                saveProfessor();
+                renderStatus();
+            }
+        }
+
+        function saveStatusNote() {
+            currentProfessor.statusNote = document.getElementById('statusNote').value;
+            saveProfessor();
+        }
+
+        function saveProfessor() {
+            const professors = JSON.parse(localStorage.getItem('professors') || '[]');
+            const index = professors.findIndex(p => p.id === currentProfessor.id);
+            if (index !== -1) {
+                professors[index] = currentProfessor;
+                localStorage.setItem('professors', JSON.stringify(professors));
+            }
+        }
+
+        function updateCourses() {
+            const program = document.getElementById('schedProgram').value;
+            const year = document.getElementById('schedYear').value;
+            const courseSelect = document.getElementById('schedCourse');
+            
+            courseSelect.innerHTML = '<option value="">Select Course</option>';
+            
+            if (program && year && curriculum[program] && curriculum[program][year]) {
+                curriculum[program][year].forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(course);
+                    option.textContent = `${course.code} - ${course.name}`;
+                    courseSelect.appendChild(option);
+                });
+            }
+        }
+
+        function addSchedule() {
+            const day = document.getElementById('schedDay').value;
+            const program = document.getElementById('schedProgram').value;
+            const year = document.getElementById('schedYear').value;
+            const courseValue = document.getElementById('schedCourse').value;
+            const startTime = document.getElementById('schedStart').value;
+            const endTime = document.getElementById('schedEnd').value;
+            const room = document.getElementById('schedRoom').value;
+            
+            if (!program || !year || !courseValue || !startTime || !endTime || !room) {
+                showAlert('Please fill in all fields.', 'error');
+                return;
+            }
+            
+            const course = JSON.parse(courseValue);
+            
+            if (startTime >= endTime) {
+                showAlert('End time must be after start time.', 'error');
+                return;
+            }
+            
+            for (const sched of currentProfessor.schedules) {
+                if (sched.day === day && sched.startTime < endTime && sched.endTime > startTime) {
+                    showAlert(`Time conflict with existing ${sched.day} schedule (${sched.startTime}-${sched.endTime}).`, 'error');
+                    return;
+                }
+            }
+            
+            const newSchedule = {
+                id: 'sch' + Date.now(),
+                day,
+                startTime,
+                endTime,
+                program,
+                yearLevel: year,
+                course: course.code,
+                courseName: course.name,
+                room
+            };
+            
+            currentProfessor.schedules.push(newSchedule);
+            saveProfessor();
+            renderSchedules();
+            
+            showAlert('Schedule added successfully.', 'success');
+            
+            document.getElementById('schedProgram').value = '';
+            document.getElementById('schedYear').value = '';
+            document.getElementById('schedCourse').innerHTML = '<option value="">Select course first</option>';
+            document.getElementById('schedStart').value = '';
+            document.getElementById('schedEnd').value = '';
+            document.getElementById('schedRoom').value = '';
+        }
+
+        function deleteSchedule(id) {
+            currentProfessor.schedules = currentProfessor.schedules.filter(s => s.id !== id);
+            saveProfessor();
+            renderSchedules();
+            showAlert('Schedule deleted.', 'success');
+        }
+
+        function renderSchedules() {
+            const container = document.getElementById('schedulesContainer');
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+            
+            if (currentProfessor.schedules.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📅</div><p>No schedules yet. Add your first schedule above.</p></div>';
+                return;
+            }
+            
+            const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const sorted = [...currentProfessor.schedules].sort((a, b) => {
+                const dayDiff = daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day);
+                if (dayDiff !== 0) return dayDiff;
+                return a.startTime.localeCompare(b.startTime);
+            });
+            
+            let html = '<table class="schedule-table"><thead><tr><th>Day</th><th>Time</th><th>Program</th><th>Course</th><th>Room</th><th></th></tr></thead><tbody>';
+            
+            sorted.forEach(sched => {
+                const isToday = sched.day === today;
+                html += `<tr class="${isToday ? 'today-class' : ''}">
+                    <td>${sched.day} ${isToday ? '(Today)' : ''}</td>
+                    <td>${sched.startTime} - ${sched.endTime}</td>
+                    <td>${sched.program} ${sched.yearLevel}Y</td>
+                    <td>${sched.course}</td>
+                    <td>${sched.room}</td>
+                    <td><button class="delete-btn" onclick="deleteSchedule('${sched.id}')">&times;</button></td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function uploadAvatar(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentProfessor.avatar = e.target.result;
+                saveProfessor();
+                renderProfile();
+                showAlert('Avatar updated.', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function changePassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            if (newPassword.length < 4) {
+                showAlert('Password must be at least 4 characters.', 'error');
+                return;
+            }
+            currentProfessor.password = newPassword;
+            saveProfessor();
+            document.getElementById('newPassword').value = '';
+            showAlert('Password changed successfully.', 'success');
+        }
+
+        function logout() {
+            sessionStorage.removeItem('professorLoggedIn');
+            sessionStorage.removeItem('professorId');
+            window.location.href = 'index.html';
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertBox');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => alert.classList.remove('show'), 4000);
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeToggle');
+            body.classList.toggle('light-mode');
+            const isLight = body.classList.contains('light-mode');
+            btn.textContent = isLight ? '☀️' : '🌙';
+            localStorage.setItem('spartansTheme', isLight ? 'light' : 'dark');
+        }
+
+        (function() {
+            const saved = localStorage.getItem('spartansTheme');
+            if (saved === 'light') {
+                document.body.classList.add('light-mode');
+                const btn = document.getElementById('themeToggle');
+                if (btn) btn.textContent = '☀️';
+            }
+        })();
+
+        init();
+    </script>
+</body>
+</html>
