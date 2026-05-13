@@ -606,6 +606,7 @@ input:checked + .toggle-slider:before {
     text-align: left;
     border-bottom: 1px solid var(--table-border);
     font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .schedule-table th {
@@ -623,6 +624,12 @@ input:checked + .toggle-slider:before {
 
 .schedule-table tr:hover:not(.today-class) {
     background: var(--table-hover);
+}
+
+/* Schedule Table Wrapper */
+#detailSchedules {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Schedule Form */
@@ -969,6 +976,34 @@ body.light-mode .search-input {
 }
 
 /* Responsive */
+@media (max-width: 480px) {
+    /* Extra aggressive mobile styles for very small screens */
+    .schedule-table th,
+    .schedule-table td {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .schedule-table th {
+        font-size: 0.7rem;
+    }
+    
+    .schedule-table {
+        min-width: 600px;
+    }
+    
+    #detailSchedules {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+        border-radius: 8px;
+    }
+    
+    .dashboard-card {
+        padding: 20px;
+    }
+}
+
 @media (max-width: 768px) {
     .dynamic-island-nav {
         padding: 10px 16px;
@@ -1015,6 +1050,43 @@ body.light-mode .search-input {
     .profile-section {
         flex-direction: column;
         text-align: center;
+    }
+    
+    /* Mobile Table Optimization */
+    .schedule-table th,
+    .schedule-table td {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .schedule-table th {
+        font-size: 0.75rem;
+    }
+    
+    #detailSchedules {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+    
+    .schedule-table {
+        min-width: 600px;
+    }
+    
+    /* Professor Detail Header on Mobile */
+    .prof-detail-header {
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .prof-detail-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+    
+    .prof-detail-info h2 {
+        font-size: 1.3rem;
     }
 }
 
